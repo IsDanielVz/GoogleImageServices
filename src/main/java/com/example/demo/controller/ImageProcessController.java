@@ -28,22 +28,7 @@ public class ImageProcessController {
 			@RequestParam(value = "json", required = true) String text
 																		) throws IOException {
 		
-		RespuestaNostra nostra = new RespuestaNostra();
-		
-		if( text != null && !text.contentEquals("") && !text.isEmpty() &&
-				file != null && !file.isEmpty() ) {
-			
-			byte[] archivoEnBytes = file.getBytes();
-			nostra = servicioGoogle.bundleGoogleServices(archivoEnBytes, text);
-			
-		}else {
-			nostra.setIsSuccess(false);
-			nostra.setRutaImagen("Debido un error en los archivos recibidos no fue posible subir el archivo");
-			nostra.setTextoRequerido("El texto recibidó fué :"+text);
-			nostra.setTextoEncontrado("La imagen recibida fué :"+file.getOriginalFilename());
-		}
-		
-		return nostra;
+		return servicioGoogle.imageProcessService(file, text);
 		
 	}
 	

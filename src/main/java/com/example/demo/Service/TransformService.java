@@ -11,7 +11,6 @@ import com.example.demo.Model.GoogleAPIRequest;
 import com.example.demo.Model.Image;
 import com.example.demo.Model.PeticionRecibida;
 import com.example.demo.Model.Request;
-import com.example.demo.Model.model;
 import com.google.gson.Gson;
 
 @Service
@@ -26,9 +25,10 @@ public class TransformService {
 		return json.fromJson(text, PeticionRecibida.class);
 	}
 	
-	public model jsonToModel(String text) {
-		Gson json = new Gson();
-		return json.fromJson(text, model.class);
+	public String textoEncontrado(String text) {
+		String[] respuestaVision = text.split("\"description\": \"");
+		String[] textoEncontrado = respuestaVision[1].split("\"");
+		return textoEncontrado[0];
 	}	
 	
 	public GoogleAPIRequest armarPeticion(String context) {
