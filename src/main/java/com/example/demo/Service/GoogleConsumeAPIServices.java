@@ -12,6 +12,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.demo.Model.GoogleAPIRequest;
+import com.example.demo.Model.PeticionRecibida;
 import com.example.demo.Model.RespuestaNostra;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -21,6 +22,7 @@ import com.google.cloud.storage.BucketInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageOptions;
+import com.google.gson.Gson;
 
 import reactor.core.publisher.Mono;
 
@@ -32,6 +34,10 @@ public class GoogleConsumeAPIServices {
 	
 	final String urlServer = "https://vision.googleapis.com";
 	
+//	constants.setFeatureType(p.getProperty("featureType"));
+//	constants.setFileCredentials(p.getProperty("fileCredentials"));
+//	constants.setVisionAddress(p.getProperty("visionAddress"));
+	
 	public RespuestaNostra imageProcessService(MultipartFile file, String text) throws IOException {
 		
 		RespuestaNostra nostra = new RespuestaNostra();
@@ -40,11 +46,23 @@ public class GoogleConsumeAPIServices {
 				file != null && !file.isEmpty() ) {
 			
 			byte[] archivoEnBytes = file.getBytes();
-			nostra = bundleGoogleServices(archivoEnBytes, text);
+			
+			try {
+				Gson gson = new Gson();
+				PeticionRecibida recibida = gson.fromJson(text, PeticionRecibida.class);
+				return bundleGoogleServices(archivoEnBytes, recibida.getTexto());
+			}catch(Exception siobe){
+				nostra.setTextoRequerido("Entrada 'json' = "+ text +" es invalida, "
+						+ "se requiere: " + transformService.getJsonFormato());
+				nostra.setTextoEncontrado(siobe.getMessage());
+				nostra.setRutaImagen("Debido a un error en el archivo 'json' no fue posible subir el archivo :"
+						+file.getOriginalFilename());
+				return nostra;
+			}
 			
 		}else {
 			nostra.setIsSuccess(false);
-			nostra.setRutaImagen("Debido un error en los archivos recibidos no fue posible subir el archivo");
+			nostra.setRutaImagen("Debido a un error en los archivos recibidos no fue posible subir el archivo");
 			nostra.setTextoRequerido("El texto recibidó fué :"+text);
 			nostra.setTextoEncontrado("La imagen recibida fué :"+file.getOriginalFilename());
 		}
@@ -53,10 +71,9 @@ public class GoogleConsumeAPIServices {
 		
 	}
 	
-	public RespuestaNostra bundleGoogleServices(byte[] archivoEnBytes, String text) throws IOException {
+	public RespuestaNostra bundleGoogleServices(byte[] archivoEnBytes, String peticionRecibida) throws IOException {
 		
 		RespuestaNostra nostra = new RespuestaNostra();
-		String peticionRecibida = transformService.jsonToPeticionRecibida(text).getTexto();
 		
 		Mono<String> vision = consumirGoogleVisionAPI(
 				transformService.armarPeticion(

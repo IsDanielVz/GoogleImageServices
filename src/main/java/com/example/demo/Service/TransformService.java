@@ -9,20 +9,19 @@ import org.springframework.stereotype.Service;
 import com.example.demo.Model.Feature;
 import com.example.demo.Model.GoogleAPIRequest;
 import com.example.demo.Model.Image;
-import com.example.demo.Model.PeticionRecibida;
 import com.example.demo.Model.Request;
-import com.google.gson.Gson;
 
 @Service
 public class TransformService {
+
+	String jsonFormato = "{''texto'' : ''texto en imagen''}";
 	
+	public String getJsonFormato() {
+		return jsonFormato;
+	}
+
 	public String toBase64(byte[] bytes) throws IOException{
         return Base64.getEncoder().encodeToString(bytes);
-	}
-	
-	public PeticionRecibida jsonToPeticionRecibida(String text) {
-		Gson json = new Gson();
-		return json.fromJson(text, PeticionRecibida.class);
 	}
 	
 	public String textoEncontrado(String text) {
