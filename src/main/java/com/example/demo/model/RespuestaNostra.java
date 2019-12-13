@@ -1,14 +1,14 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 public class RespuestaNostra {
 			
-	Boolean isSuccess = new Boolean(false);
+	Boolean isSuccess = Boolean.valueOf(true);
 	
-	String textoRequerido = new String();
+	String textoRequerido = "";
 	
-	String textoEncontrado = new String();
+	String textoEncontrado = "";
 	
-	String rutaImagen = new String();
+	String rutaImagen = "";
 
 	public Boolean getIsSuccess() {
 		return isSuccess;

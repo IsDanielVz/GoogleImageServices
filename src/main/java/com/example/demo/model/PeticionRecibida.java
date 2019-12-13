@@ -1,8 +1,8 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 public class PeticionRecibida {
 	
-	String texto = new String();
+	String texto = "";
 
 	public String getTexto() {
 		return texto;

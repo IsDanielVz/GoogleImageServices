@@ -1,12 +1,13 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Request {
 	
 	Image image = new Image();
 	
-	ArrayList<Feature> features = new ArrayList<>();
+	List<Feature> features = new ArrayList<>();
 
 	public Image getImage() {
 		return image;
@@ -16,11 +17,11 @@ public class Request {
 		this.image = image;
 	}
 
-	public ArrayList<Feature> getFeatures() {
+	public List<Feature> getFeatures() {
 		return features;
 	}
 
-	public void setFeatures(ArrayList<Feature> features) {
+	public void setFeatures(List<Feature> features) {
 		this.features = features;
 	}
 

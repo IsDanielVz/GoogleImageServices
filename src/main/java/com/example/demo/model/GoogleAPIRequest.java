@@ -1,19 +1,20 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
 @Component
 public class GoogleAPIRequest {
 
-	ArrayList<Request> requests = new ArrayList<>();
+	List<Request> requests = new ArrayList<>();
 	
-	public ArrayList<Request> getRequests() {
+	public List<Request> getRequests() {
 		return requests;
 	}
 
-	public void setRequests(ArrayList<Request> requests) {
+	public void setRequests(List<Request> requests) {
 		this.requests = requests;
 	}
 

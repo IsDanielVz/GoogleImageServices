@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.demo.Model.RespuestaNostra;
-import com.example.demo.Service.GoogleConsumeAPIServices;
+import com.example.demo.model.RespuestaNostra;
+import com.example.demo.service.GoogleConsumeAPIServices;
 
 @RestController
 @RequestMapping("/google")

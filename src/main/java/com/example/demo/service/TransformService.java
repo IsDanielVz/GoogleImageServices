@@ -1,26 +1,19 @@
-package com.example.demo.Service;
+package com.example.demo.service;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 
 import org.springframework.stereotype.Service;
 
-import com.example.demo.Model.Feature;
-import com.example.demo.Model.GoogleAPIRequest;
-import com.example.demo.Model.Image;
-import com.example.demo.Model.Request;
+import com.example.demo.model.Feature;
+import com.example.demo.model.GoogleAPIRequest;
+import com.example.demo.model.Image;
+import com.example.demo.model.Request;
 
 @Service
 public class TransformService {
 
-	String jsonFormato = "{''texto'' : ''texto en imagen''}";
-	
-	public String getJsonFormato() {
-		return jsonFormato;
-	}
-
-	public String toBase64(byte[] bytes) throws IOException{
+	public String toBase64(byte[] bytes) {
         return Base64.getEncoder().encodeToString(bytes);
 	}
 	

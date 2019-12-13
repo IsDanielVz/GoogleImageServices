@@ -1,8 +1,8 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 public class Image {
 	
-	String content = new String();
+	String content = "";
 
 	public String getContent() {
 		return content;

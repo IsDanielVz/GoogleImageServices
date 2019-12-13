@@ -1,4 +1,4 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 import java.util.Map;
 
@@ -10,5 +10,5 @@ public class FullTextAnnotation {
 	public Map<String, Object> pages;
 	
 	@JsonProperty("text")
-	public String text = new String();
+	public String text = "";
 }

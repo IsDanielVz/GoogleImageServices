@@ -1,9 +1,9 @@
-package com.example.demo.Model;
+package com.example.demo.model;
 
 
 public class Feature {
 	
-	String type = new String();
+	String type = "";
 
 	public String getType() {
 		return type;
