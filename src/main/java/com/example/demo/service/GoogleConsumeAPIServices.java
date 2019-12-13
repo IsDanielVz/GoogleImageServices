@@ -2,6 +2,8 @@ package com.example.demo.service;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,135 +32,139 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class GoogleConsumeAPIServices {
-	
+
 	@Autowired
 	TransformService transformService;
-	
-	String urlServer = "https://vision.googleapis.com";
-	
+
+	Properties constants = new Properties();
+
 	public RespuestaNostra imageProcessService(MultipartFile file, String text) throws IOException {
-		
+
 		RespuestaNostra nostra = new RespuestaNostra();
-		
-		if( text != null && !text.contentEquals("") && !text.isEmpty() &&
-				file != null && !file.isEmpty() ) {
-			
+
+		if (text != null && !text.contentEquals("") && !text.isEmpty() && file != null && !file.isEmpty()) {
+
 			byte[] archivoEnBytes = file.getBytes();
-			
+
 			try {
 				Gson gson = new Gson();
 				PeticionRecibida recibida = gson.fromJson(text, PeticionRecibida.class);
 				return bundleGoogleServices(archivoEnBytes, recibida.getTexto());
-			}catch(JsonSyntaxException causa){
-				nostra.setTextoRequerido("Entrada json = ''"+ text +"'' es invalida, "
+			} catch (JsonSyntaxException causa) {
+				nostra.setTextoRequerido("Entrada json = ''" + text + "'' es invalida, "
 						+ "se requiere un formato json para un string de nombre texto");
 				nostra.setTextoEncontrado(causa.getMessage());
 				nostra.setRutaImagen("Debido a un error en el archivo 'json' no fue posible subir el archivo :"
-						+file.getOriginalFilename());
+						+ file.getOriginalFilename());
 				return nostra;
-			}catch(IllegalStateException causa){
+			} catch (IllegalStateException causa) {
 				nostra.setTextoEncontrado(causa.getMessage());
 				nostra.setRutaImagen("Error imprevisto con : " + causa.getStackTrace());
-					return nostra;
-			}catch(StorageException causa){
+				return nostra;
+			} catch (StorageException causa) {
 				nostra.setTextoEncontrado(causa.getMessage());
-				nostra.setRutaImagen("Se originó una coincidencia en el nombre del bucket, mande de nuevo su petcición");
-					return nostra;
-			}catch(GoogleJsonResponseException causa){
+				nostra.setRutaImagen(
+						"Se originó una coincidencia en el nombre del bucket, mande de nuevo su petcición");
+				return nostra;
+			} catch (GoogleJsonResponseException causa) {
 				nostra.setTextoEncontrado(causa.getMessage());
 				nostra.setRutaImagen("Error imprevisto con : " + causa.getCause());
-					return nostra;
-			}catch(Exception causa){
+				return nostra;
+			} catch (Exception causa) {
 				nostra.setTextoEncontrado(causa.getMessage());
 				nostra.setRutaImagen("Error imprevisto con : " + causa.getStackTrace());
-					return nostra;
-			}	
-			
-		}else {
+				return nostra;
+			}
+
+		} else {
 			nostra.setIsSuccess(false);
 			nostra.setRutaImagen("Por favor verifique sus archivos, ya que se encuentran vacios");
-			nostra.setTextoRequerido("El texto recibidó fué :"+text);
-			if(file != null)
-				nostra.setTextoEncontrado("La imagen recibida fué :"+file.getOriginalFilename());
+			nostra.setTextoRequerido("El texto recibidó fué :" + text);
+			if (file != null)
+				nostra.setTextoEncontrado("La imagen recibida fué :" + file.getOriginalFilename());
 			else
 				nostra.setTextoEncontrado("La imagen recibida está vacia");
 		}
-		
+
 		return nostra;
-		
+
 	}
-	
+
 	public RespuestaNostra bundleGoogleServices(byte[] archivoEnBytes, String peticionRecibida) throws IOException {
-		
+
 		RespuestaNostra nostra = new RespuestaNostra();
 		System.out.println("Iniciamos peticiones a google VISION");
 		Mono<String> vision = consumirGoogleVisionAPI(
-				transformService.armarPeticion(
-						transformService.toBase64(archivoEnBytes)));
+				transformService.armarPeticion(transformService.toBase64(archivoEnBytes)));
 		System.out.println("Se termina operación con VISION, comensamos con STORAGE");
 		Mono<String> bucket = consumirGoogleStorageAPI(archivoEnBytes);
 		System.out.println("Se termina operación STORAGE");
 		String textoEncontrado = transformService.textoEncontrado(getMonoValue(vision));
-		
-			nostra.setIsSuccess(textoEncontrado.contains(peticionRecibida));
-			nostra.setTextoRequerido(peticionRecibida);
-			nostra.setRutaImagen(getMonoValue(bucket));
-			nostra.setTextoEncontrado(textoEncontrado);
-		
+
+		nostra.setIsSuccess(textoEncontrado.contains(peticionRecibida));
+		nostra.setTextoRequerido(peticionRecibida);
+		nostra.setRutaImagen(getMonoValue(bucket));
+		nostra.setTextoEncontrado(textoEncontrado);
+
 		return nostra;
-		
+
 	}
-	
-	public Mono<String> consumirGoogleVisionAPI(GoogleAPIRequest body) {		
+
+	public Mono<String> consumirGoogleVisionAPI(GoogleAPIRequest body) throws IOException {
+
+		InputStream input = GoogleConsumeAPIServices.class.getClassLoader().getResourceAsStream("config.properties");
+		if (input == null) {
+			System.out.println("NO HAY PROPIEDADES PARA EL PROYECTO");
+		}
+		constants.load(input);
+		String urlServer = constants.getProperty("Google.Vision.Address");
+		String urlFinal = constants.getProperty("Google.Vision.Final");
 
 		WebClient.Builder builder = WebClient.builder().baseUrl(urlServer);
-	
+
 		WebClient webClient = builder.build();
-		
-		String urlFinal="/v1p4beta1/images:annotate?key=AIzaSyCo8wtM9wac_74K446J0CV7oVHKLdENLYo";
+
 		System.out.println("Antes del return VISION webClient");
-		
-		return webClient.post()
-				.uri(urlFinal)
-				.body(BodyInserters.fromValue(body))
-				.exchange()
-			.flatMap( x -> 
-			{ 
-				if ( ! x.statusCode().is2xxSuccessful())
-					return 	Mono.just(urlServer+urlFinal
-				+" Called. Error 4xx: "+x.statusCode()+"\n");
-				System.out.println("TERMINADO VISION en return x.bodyToMono");
-				return x.bodyToMono(String.class);
-			});		
+
+		return webClient.post().uri(urlFinal).body(BodyInserters.fromValue(body)).exchange().flatMap(x -> {
+			if (!x.statusCode().is2xxSuccessful())
+				return Mono.just(urlServer + urlFinal + " Called. Error 4xx: " + x.statusCode() + "\n");
+			System.out.println("TERMINADO VISION en return x.bodyToMono");
+			return x.bodyToMono(String.class);
+		});
 	}
-	
+
 	public Mono<String> consumirGoogleStorageAPI(byte[] imagenString) throws IOException {
 
-		String bucketName = UUID.randomUUID().toString().substring(0, 5);
+		InputStream input = GoogleConsumeAPIServices.class.getClassLoader().getResourceAsStream("config.properties");
+		if (input == null) {
+			System.out.println("NO HAY PROPIEDADES PARA EL PROYECTO");
+		}
+		constants.load(input);
+		String glob = constants.getProperty("Google.Storage.Glob");
+		String cert = constants.getProperty("Google.Storage.Credentials");
+		String chump = constants.getProperty("Google.Storage.Chump");
 
-		Credentials credentials = GoogleCredentials
-				  .fromStream(new FileInputStream("C:/workingSET/Clave.json"));
-		Storage storage = StorageOptions.newBuilder().setCredentials(credentials)
-				.build().getService();	
-		
-		Bucket bucket =
-	    	    storage.create(
-	    	        BucketInfo.newBuilder(bucketName)
-	    	            // See here for possible values: http://g.co/cloud/storage/docs/storage-classes
-	    	            .setStorageClass(StorageClass.COLDLINE)
-	    	            // Possible values: http://g.co/cloud/storage/docs/bucket-locations#location-mr
-	    	            .setLocation("asia")
-	    	            .build());
+		String bucketName = chump+UUID.randomUUID().toString().substring(0, 5);
 
-		Blob blob = bucket.create("my-first-blob", imagenString);
-		
+		Credentials credentials = GoogleCredentials.fromStream(new FileInputStream(cert));
+		Storage storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+
+		Bucket bucket = storage.create(BucketInfo.newBuilder(bucketName)
+				// See here for possible values: http://g.co/cloud/storage/docs/storage-classes
+				.setStorageClass(StorageClass.COLDLINE)
+				// Possible values: http://g.co/cloud/storage/docs/bucket-locations#location-mr
+				.setLocation("asia").build());
+
+		Blob blob = bucket.create(glob, imagenString);
+
 		System.out.println("TERMINADO STORAGE");
-		    
+
 		return Mono.just(blob.getMediaLink());
 	}
-	
+
 	public String getMonoValue(Mono<String> mono) {
-	    return mono.block();
+		return mono.block();
 	}
-		    
+
 }

@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Properties;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +15,8 @@ import com.example.demo.model.Request;
 
 @Service
 public class TransformService {
+	
+	Properties constants = new Properties();
 
 	public String toBase64(byte[] bytes) {
         return Base64.getEncoder().encodeToString(bytes);
@@ -23,14 +28,22 @@ public class TransformService {
 		return textoEncontrado[0];
 	}	
 	
-	public GoogleAPIRequest armarPeticion(String context) {
+	public GoogleAPIRequest armarPeticion(String context) throws IOException {
+		
+		InputStream input = TransformService.class.getClassLoader().getResourceAsStream("config.properties");
+		if (input == null) {
+			System.out.println("NO HAY PROPIEDADES PARA EL PROYECTO");
+		}
+		constants.load(input);
+		String type = constants.getProperty("Google.Vision.FeatureType");
+		
 		GoogleAPIRequest solicitud = new GoogleAPIRequest();
 		
 		Image imagen = new Image();
 		imagen.setContent(context);
 	
 		Feature caracteristicas = new Feature();
-		caracteristicas.setType("TEXT_DETECTION");
+		caracteristicas.setType(type);
 	
 		Request request = new Request();
 		ArrayList<Feature> features = new ArrayList<>();
