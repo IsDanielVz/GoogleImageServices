@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.model.RespuestaNostra;
-import com.example.demo.service.GoogleConsumeAPIServices;
+import com.example.demo.service.ProxyAccesService;
 
 @RestController
 @RequestMapping("/google")
 public class ImageProcessController {
-
+	
 	@Autowired
-	GoogleConsumeAPIServices servicioGoogle;
+	ProxyAccesService validateService;
 	
 	@PostMapping(value = "/imagen",
 			consumes = {MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -28,7 +28,7 @@ public class ImageProcessController {
 			@RequestParam(value = "json", required = true) String text
 																		) throws IOException {
 		
-		return servicioGoogle.imageProcessService(file, text);
+		return validateService.imageProcessService(file, text);
 		
 	}
 	
