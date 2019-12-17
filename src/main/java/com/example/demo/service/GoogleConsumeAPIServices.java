@@ -3,6 +3,7 @@ package com.example.demo.service;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -22,6 +23,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageOptions;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -35,17 +37,23 @@ public class GoogleConsumeAPIServices {
 	public RespuestaNostra bundleGoogleServices(byte[] archivoEnBytes, String peticionRecibida) throws IOException {
 
 		RespuestaNostra nostra = new RespuestaNostra();
-		System.out.println("Iniciamos peticiones a google VISION");
-		Mono<String> vision = consumirGoogleVisionAPI(
-				transformService.armarPeticion(transformService.toBase64(archivoEnBytes)));
-		System.out.println("Se termina operación con VISION, comensamos con STORAGE");
-		Mono<String> bucket = consumirGoogleStorageAPI(archivoEnBytes);
-		System.out.println("Se termina operación STORAGE");
-		String textoEncontrado = transformService.textoEncontrado(getMonoValue(vision));
+		
+		Flux<String> google = Flux.merge(
+				consumirGoogleVisionAPI(
+						transformService.armarPeticion(transformService.toBase64(archivoEnBytes))),
+				consumirGoogleStorageAPI(archivoEnBytes));
+		
+		List<String> respuestas = google.collectSortedList().block();
+		
+		String vision = respuestas.get(1);
+		
+		String bucket = respuestas.get(0);
+		
+		String textoEncontrado = transformService.textoEncontrado(vision);
 
 		nostra.setIsSuccess(textoEncontrado.contains(peticionRecibida));
 		nostra.setTextoRequerido(peticionRecibida);
-		nostra.setRutaImagen(getMonoValue(bucket));
+		nostra.setRutaImagen(bucket);
 		nostra.setTextoEncontrado(textoEncontrado);
 
 		return nostra;
@@ -55,9 +63,6 @@ public class GoogleConsumeAPIServices {
 	public Mono<String> consumirGoogleVisionAPI(GoogleAPIRequest body) throws IOException {
 
 		InputStream input = GoogleConsumeAPIServices.class.getClassLoader().getResourceAsStream("config.properties");
-		if (input == null) {
-			System.out.println("NO HAY PROPIEDADES PARA EL PROYECTO");
-		}
 		constants.load(input);
 		String urlServer = constants.getProperty("Google.Vision.Address");
 		String urlFinal = constants.getProperty("Google.Vision.Final");
@@ -66,12 +71,9 @@ public class GoogleConsumeAPIServices {
 
 		WebClient webClient = builder.build();
 
-		System.out.println("Antes del return VISION webClient");
-
 		return webClient.post().uri(urlFinal).body(BodyInserters.fromValue(body)).exchange().flatMap(x -> {
 			if (!x.statusCode().is2xxSuccessful())
 				return Mono.just(urlServer + urlFinal + " Called. Error 4xx: " + x.statusCode() + "\n");
-			System.out.println("TERMINADO VISION en return x.bodyToMono");
 			return x.bodyToMono(String.class);
 		});
 	}
@@ -79,9 +81,6 @@ public class GoogleConsumeAPIServices {
 	public Mono<String> consumirGoogleStorageAPI(byte[] imagenString) throws IOException {
 
 		InputStream input = GoogleConsumeAPIServices.class.getClassLoader().getResourceAsStream("config.properties");
-		if (input == null) {
-			System.out.println("NO HAY PROPIEDADES PARA EL PROYECTO");
-		}
 		constants.load(input);
 		String glob = constants.getProperty("Google.Storage.Glob");
 		String cert = constants.getProperty("Google.Storage.Credentials");
@@ -100,13 +99,7 @@ public class GoogleConsumeAPIServices {
 
 		Blob blob = bucket.create(glob, imagenString);
 
-		System.out.println("TERMINADO STORAGE");
-
 		return Mono.just(blob.getMediaLink());
-	}
-
-	public String getMonoValue(Mono<String> mono) {
-		return mono.block();
 	}
 
 }

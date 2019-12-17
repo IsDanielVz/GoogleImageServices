@@ -31,9 +31,6 @@ public class TransformService {
 	public GoogleAPIRequest armarPeticion(String context) throws IOException {
 		
 		InputStream input = TransformService.class.getClassLoader().getResourceAsStream("config.properties");
-		if (input == null) {
-			System.out.println("NO HAY PROPIEDADES PARA EL PROYECTO");
-		}
 		constants.load(input);
 		String type = constants.getProperty("Google.Vision.FeatureType");
 		

@@ -8,7 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo.model.PeticionRecibida;
 import com.example.demo.model.RespuestaNostra;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.cloud.storage.StorageException;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -30,12 +29,12 @@ public class ProxyAccesService {
 			
 		} else {
 			nostra.setIsSuccess(false);
-			nostra.setRutaImagen("Por favor verifique sus archivos, ya que se encuentran vacios");
+			nostra.setTextoEncontrado("Por favor verifique sus archivos, ya que se encuentran vacios");
 			nostra.setTextoRequerido("El texto recibidó fué :" + text);
 			if (file != null)
-				nostra.setTextoEncontrado("La imagen recibida fué :" + file.getOriginalFilename());
+				nostra.setRutaImagen("La imagen recibida fué :" + file.getOriginalFilename());
 			else
-				nostra.setTextoEncontrado("La imagen recibida está vacia");
+				nostra.setRutaImagen("La imagen recibida está vacia");
 		}
 
 		return nostra;
@@ -57,21 +56,13 @@ public class ProxyAccesService {
 			nostra.setRutaImagen("Debido a un error en el archivo 'json' no fue posible subir el archivo :"
 					+ file.getOriginalFilename());
 			return nostra;
-		} catch (IllegalStateException causa) {
-			nostra.setTextoEncontrado(causa.getMessage());
-			nostra.setRutaImagen("Error imprevisto con : " + causa.getStackTrace());
-			return nostra;
 		} catch (StorageException causa) {
 			nostra.setTextoEncontrado(causa.getMessage());
 			nostra.setRutaImagen("Se originó una coincidencia en el nombre del bucket, mande de nuevo su petcición");
 			return nostra;
-		} catch (GoogleJsonResponseException causa) {
-			nostra.setTextoEncontrado(causa.getMessage());
-			nostra.setRutaImagen("Error imprevisto con : " + causa.getCause());
-			return nostra;
 		} catch (Exception causa) {
 			nostra.setTextoEncontrado(causa.getMessage());
-			nostra.setRutaImagen("Error imprevisto con : " + causa.getStackTrace());
+			nostra.setRutaImagen("Error imprevisto con : " + causa.getCause());
 			return nostra;
 		}
 		

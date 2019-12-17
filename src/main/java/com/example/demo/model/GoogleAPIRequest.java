@@ -18,10 +18,4 @@ public class GoogleAPIRequest {
 		this.requests = requests;
 	}
 
-	@Override
-	public String toString() {
-		return "json [request=" + requests + ", getClass()=" + getClass() + ", hashCode()=" + hashCode()
-				+ ", toString()=" + super.toString() + "]";
-	}
-
 }

@@ -2,7 +2,7 @@ package com.example.demo.model;
 
 public class RespuestaNostra {
 			
-	Boolean isSuccess = Boolean.valueOf(true);
+	Boolean isSuccess = Boolean.valueOf(false);
 	
 	String textoRequerido = "";
 	
